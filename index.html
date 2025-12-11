@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Apple Float Pro - Intelligent Flight Experience</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Experience the future of intelligent flight with Apple Float Pro - Premium drone control with AI-powered navigation">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f5f5f7 0%, #e5e5e7 50%, #d1d1d6 100%);
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: #1d1d1f;
+    }
+    #ui {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 100;
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 12px 20px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #voiceBtn {
+      background: linear-gradient(135deg, #0a84ff, #64d2ff);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(10, 132, 255, 0.3);
+    }
+    
+    #voiceBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(10, 132, 255, 0.4);
+    }
+    
+    #voiceBtn:active {
+      transform: translateY(0);
+    }
+    #statusPanel {
+      position: fixed;
+      top: 100px;
+      left: 20px;
+      width: 280px;
+      padding: 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+      font-size: 13px;
+      line-height: 1.6;
+      z-index: 90;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+    }
+    
+    #statusPanel:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
+    }
+    #statusTitle {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #f5f5f7, #a0a0aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #statusSubtitle {
+      font-size: 12px;
+      color: #a0a0aa;
+      margin-bottom: 16px;
+      opacity: 0.8;
+    }
+    canvas {
+      display: block;
+      cursor: grab;
+    }
+    
+    canvas:active {
+      cursor: grabbing;
+    }
+    
+    .status-metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .status-label {
+      color: #a0a0aa;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    
+    .status-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .battery-container {
+      position: relative;
+      margin-left: 8px;
+    }
+    
+    .battery {
+      width: 36px;
+      height: 16px;
+      border-radius: 6px;
+      border: 2px solid #8c8c8c;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .battery-level {
+      width: 30px;
+      height: 10px;
+      margin: 2px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #32d74b, #30d158);
+      transition: all 0.3s ease;
+    }
+    
+    .battery-tip {
+      position: absolute;
+      right: -8px;
+      top: 4px;
+      width: 4px;
+      height: 8px;
+      border-radius: 0 2px 2px 0;
+      border: 2px solid #8c8c8c;
+      border-left: none;
+    }
+    
+    .help-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 300px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      z-index: 80;
+      font-size: 12px;
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+    }
+    
+    .help-panel:hover {
+      opacity: 1;
+    }
+    
+    .help-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1d1d1f;
+    }
+    
+    .command-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .command-list li {
+      margin: 4px 0;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #a0a0aa;
+    }
+    
+    .command-list .cmd {
+      color: #0a84ff;
+      font-weight: 600;
+    }
+    
+    /* Telemetry Panel */
+    #telemetryPanel {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      width: 200px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #ffffff;
+      font-size: 12px;
+      z-index: 90;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .telemetry-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .telemetry-value {
+      color: #64d2ff;
+      font-weight: 600;
+    }
+    
+    /* Mini Map */
+    #miniMap {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 150px;
+      height: 150px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      z-index: 90;
+      overflow: hidden;
+    }
+    
+    .map-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .map-human {
+      background: #34c759;
+      box-shadow: 0 0 10px rgba(52, 199, 89, 0.5);
+    }
+    
+    .map-drone {
+      background: #0a84ff;
+      box-shadow: 0 0 10px rgba(10, 132, 255, 0.5);
+    }
+    
+    .flight-path {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(100, 210, 255, 0.3);
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Enhanced UI overlay -->
+  <div id="ui">
+    <div class="control-group">
+      <button id="voiceBtn">🎙 Click to Listen</button>
+    </div>
+  </div>
+
+  <!-- Enhanced Status Panel -->
+  <div id="statusPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <div id="statusTitle">Float Pro</div>
+        <div id="statusSubtitle">Designed by Apple in California</div>
+      </div>
+      <div class="battery-container">
+        <div class="battery">
+          <div class="battery-level"></div>
+        </div>
+        <div class="battery-tip"></div>
+      </div>
+    </div>
+    
+    <div class="status-metric">
+      <span class="status-label">Flight Mode</span>
+      <span id="modeText" class="status-value">Standby</span>
+    </div>
+    
+    <div class="status-metric">
+      <span class="status-label">Last Command</span>
+      <span id="lastCmdText" class="status-value">None</span>
+    </div>
+    
+    <div class="status-metric" style="border-bottom:none;">
+      <span class="status-label">Status</span>
+      <span id="connectionStatus" class="status-value" style="color:#32d74b;">Connected</span>
+    </div>
+  </div>
+  
+  <!-- Help Panel -->
+  <div class="help-panel">
+    <div class="help-title">🎯 Smart Commands</div>
+    <ul class="command-list">
+      <li><span class="cmd">"Take off"</span> - Precision launch</li>
+      <li><span class="cmd">"Hover"</span> - Stationary flight</li>
+      <li><span class="cmd">"Follow me"</span> - Intelligent tracking</li>
+      <li><span class="cmd">"Orbit"</span> - Cinematic circle</li>
+      <li><span class="cmd">"Wide shot"</span> - Distant filming</li>
+      <li><span class="cmd">"Land"</span> - Gentle touchdown</li>
+      <li><span class="cmd">"Return home"</span> - Auto return</li>
+    </ul>
+    <div style="margin-top:12px;font-size:11px;color:#8e8e93;">✨ Powered by Apple Intelligence</div>
+  </div>
+  
+  <!-- Voice Command Display -->
+  <div id="voiceDisplay" style="
+    position:fixed;top:32px;left:50%;transform:translateX(-50%);
+    background:rgba(0,0,0,0.6);color:#fff;
+    padding:4px 8px;border-radius:8px;
+    font-size:12px;font-weight:500;
+    backdrop-filter:blur(10px);
+    z-index:150;display:none;
+    max-width:200px;
+    border:1px solid rgba(255,255,255,0.15);
+    display:flex;align-items:center;gap:8px;
+    height:28px;
+  ">
+    <div id="voiceText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Listening...</div>
+    <div id="soundWave" style="
+      display:flex;align-items:center;
+      height:16px;gap:1px;
+    ">
+      <!-- Sound wave bars will be added by JavaScript -->
+    </div>
+  </div>
+  
+  <!-- Telemetry Panel -->
+  <div id="telemetryPanel">
+    <div style="font-weight:700;margin-bottom:12px;color:#64d2ff;">Flight Data</div>
+    <div class="telemetry-item">
+      <span>Altitude:</span>
+      <span class="telemetry-value" id="altitudeValue">0.5m</span>
+    </div>
+    <div class="telemetry-item">
+      <span>Speed:</span>
+      <span class="telemetry-value" id="speedValue">0 m/s</span>
+    </div>
+    <div class="telemetry-item">
+      <span>Distance:</span>
+      <span class="telemetry-value" id="distanceValue">4.0m</span>
+    </div>
+  </div>
+  
+  <!-- Mini Map -->
+  <div id="miniMap">
+    <div class="map-dot map-human" id="mapHuman"></div>
+    <div class="map-dot map-drone" id="mapDrone"></div>
+  </div>
+  
+  
+
+  <!-- Three.js CDN -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+  <script>
+    // ======== 3D SETUP ========
+    let scene, camera, renderer;
+    let human, drone;
+    let frameCount = 0;
+    let flightPath = [];
+    let cameraMode = "default"; // "default", "follow", "overhead", "closeup", "side"
+    let telemetryData = { altitude: 0, speed: 0, distance: 0 };
+    let windEffect = { x: 0, z: 0 };
+
+    let humanState = {
+      x: 0,
+      z: 0,
+      walkDir: 1
+    };
+
+    // States: "landed", "takeoff", "hover", "follow", "orbit", "wideshot", "land", "stop"
+    let droneState = {
+      x: 4,
+      y: 0.5,
+      z: 0,
+      state: "landed",
+      angle: 0,
+      propAngle: 0,
+      orbitAngle: 0
+    };
+    let prevDroneState = droneState.state;
+
+    // Removed obstacle and detour logic for simplified flight paths
+
+    // voice
+    let recognition = null;
+    let listening = false;
+    let speechSupported = false;
+    let soundWaveBars = [];
+    let isListening = false;
+    let permissionGranted = false;
+
+    let lastCommandText = "None";
+
+    init();
+    animate();
+    initSoundWave();
+    
+
+    function init() {
+      scene = new THREE.Scene();
+      // Apple presentation-style background
+      scene.background = new THREE.Color(0xf5f5f7);
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+      camera.position.set(10, 6.5, 12);
+      camera.lookAt(0, 2, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(w, h);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      document.body.appendChild(renderer.domElement);
+
+      // Apple keynote-style lighting
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xf0f0f0, 0.8);
+      scene.add(hemi);
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      keyLight.position.set(8, 12, 6);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.set(2048, 2048);
+      keyLight.shadow.camera.near = 1;
+      keyLight.shadow.camera.far = 40;
+      scene.add(keyLight);
+
+      const rimLight = new THREE.DirectionalLight(0xe5e5e7, 0.6);
+      rimLight.position.set(-10, 8, -8);
+      scene.add(rimLight);
+
+      // Apple presentation-style ground
+      const groundGeo = new THREE.CircleGeometry(14, 64);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.1,
+        metalness: 0.0
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // Subtle gradient backdrop
+      const backdropGeo = new THREE.PlaneGeometry(30, 15);
+      const backdropMat = new THREE.MeshBasicMaterial({
+        color: 0xe5e5e7,
+        transparent: true,
+        opacity: 0.3
+      });
+      const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
+      backdrop.position.set(0, 7.5, -12);
+      scene.add(backdrop);
+
+      // Removed obstacle for cleaner demo environment
+
+      // Human & Drone
+      human = createHuman();
+      scene.add(human);
+
+      drone = createDrone();
+      scene.add(drone);
+
+      setupUI();
+      setupSpeechRecognition();
+      window.addEventListener("resize", onWindowResize);
+    }
+
+    function onWindowResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    // ======== OBJECT CREATION ========
+
+    function createHuman() {
+      const g = new THREE.Group();
+
+      // Shadow
+      const shadowGeo = new THREE.CircleGeometry(0.45, 32);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.4
+      });
+      const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = 0.01;
+      g.add(shadow);
+
+      // Legs - Jeans
+      const legGeo = new THREE.BoxGeometry(0.12, 0.9, 0.12);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x4a6eb8, roughness: 0.8 });
+
+      const leftLeg = new THREE.Mesh(legGeo, legMat);
+      leftLeg.position.set(-0.09, 0.45, 0);
+      leftLeg.castShadow = true;
+      g.add(leftLeg);
+
+      const rightLeg = leftLeg.clone();
+      rightLeg.position.x = 0.09;
+      g.add(rightLeg);
+
+      // Torso - Black high neck long sleeve
+      const torsoGeo = new THREE.BoxGeometry(0.45, 0.9, 0.25);
+      const torsoMat = new THREE.MeshStandardMaterial({
+        color: 0x1c1c1e,
+        roughness: 0.6
+      });
+      const torso = new THREE.Mesh(torsoGeo, torsoMat);
+      torso.position.y = 1.2;
+      torso.castShadow = true;
+      torso.receiveShadow = true;
+      g.add(torso);
+
+      // Arms - Black long sleeves
+      const armGeo = new THREE.BoxGeometry(0.12, 0.8, 0.12);
+      const armMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.6 });
+
+      const leftArm = new THREE.Mesh(armGeo, armMat);
+      leftArm.position.set(-0.35, 1.25, 0);
+      leftArm.castShadow = true;
+      g.add(leftArm);
+
+      const rightArm = leftArm.clone();
+      rightArm.position.x = 0.35;
+      g.add(rightArm);
+
+      // Head
+      const headGeo = new THREE.SphereGeometry(0.24, 24, 24);
+      const headMat = new THREE.MeshStandardMaterial({
+        color: 0xeac6a2,
+        roughness: 0.5
+      });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 1.8;
+      head.castShadow = true;
+      g.add(head);
+
+      // Hair cap
+      const hairGeo = new THREE.SphereGeometry(0.245, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+      const hairMat = new THREE.MeshStandardMaterial({
+        color: 0x262626,
+        roughness: 0.4
+      });
+      const hair = new THREE.Mesh(hairGeo, hairMat);
+      hair.position.y = 1.82;
+      hair.castShadow = true;
+      g.add(hair);
+
+      // Eyes
+      const eyeGeo = new THREE.SphereGeometry(0.04, 16, 16);
+      const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const eyeLeft = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+      const eyeRight = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+      eyeLeft.position.set(-0.06, 1.80, 0.21);
+      eyeRight.position.set(0.06, 1.80, 0.21);
+      g.add(eyeLeft, eyeRight);
+
+      const pupilGeo = new THREE.SphereGeometry(0.02, 16, 16);
+      const pupilMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+      const pupilLeft = new THREE.Mesh(pupilGeo, pupilMat);
+      const pupilRight = new THREE.Mesh(pupilGeo, pupilMat);
+      pupilLeft.position.copy(eyeLeft.position).add(new THREE.Vector3(0, 0, 0.03));
+      pupilRight.position.copy(eyeRight.position).add(new THREE.Vector3(0, 0, 0.03));
+      g.add(pupilLeft, pupilRight);
+
+      g.userData.head = head;
+      g.userData.pupilLeft = pupilLeft;
+      g.userData.pupilRight = pupilRight;
+
+      g.position.set(humanState.x, 0, humanState.z);
+      return g;
+    }
+
+    function createDrone() {
+      const g = new THREE.Group();
+
+      // Enhanced shadow - ultra compact
+      const shadowGeo = new THREE.CircleGeometry(0.4, 64);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.2
+      });
+      const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = 0.01;
+      g.add(shadow);
+
+      // Apple-style main body - metallic grey
+      const bodyGeo = new THREE.BoxGeometry(0.45, 0.15, 0.35);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0xf2f2f7,
+        roughness: 0.1,
+        metalness: 0.6
+      });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.4;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      g.add(body);
+
+      // Apple logo on top - tiny
+      const logoGeo = new THREE.CircleGeometry(0.03, 32);
+      const logoMat = new THREE.MeshStandardMaterial({
+        color: 0x1d1d1f,
+        roughness: 0.1,
+        metalness: 0.9
+      });
+      const logo = new THREE.Mesh(logoGeo, logoMat);
+      logo.position.set(0, 0.48, 0);
+      logo.rotation.x = -Math.PI / 2;
+      g.add(logo);
+
+      // Premium glass top - tinted grey
+      const glassGeo = new THREE.BoxGeometry(0.43, 0.03, 0.33);
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: 0xf2f2f7,
+        roughness: 0.05,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.9
+      });
+      const glass = new THREE.Mesh(glassGeo, glassMat);
+      glass.position.y = 0.49;
+      g.add(glass);
+
+      // Multi-sensor array - ultra compact
+      const sensorPositions = [
+        { x: 0, z: 0.14, color: 0x007AFF, size: 0.02 },
+        { x: -0.05, z: 0.10, color: 0x34C759, size: 0.015 },
+        { x: 0.05, z: 0.10, color: 0xFF9F0A, size: 0.015 }
+      ];
+      
+      sensorPositions.forEach((sensor, i) => {
+        const sensorGeo = new THREE.SphereGeometry(sensor.size, 32, 32);
+        const sensorMat = new THREE.MeshStandardMaterial({
+          color: sensor.color,
+          emissive: sensor.color,
+          emissiveIntensity: 0.3,
+          roughness: 0.1,
+          metalness: 0.8
+        });
+        const sensorMesh = new THREE.Mesh(sensorGeo, sensorMat);
+        sensorMesh.position.set(sensor.x, 0.41, sensor.z);
+        g.add(sensorMesh);
+        if (i === 0) g.userData.led = sensorMesh;
+      });
+
+      // Metallic grey arms - ultra compact
+      const armGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.45, 32);
+      const armMat = new THREE.MeshStandardMaterial({
+        color: 0xc7c7cc,
+        roughness: 0.2,
+        metalness: 0.8
+      });
+
+      // Create 4 arms in X configuration - very close to body
+      const armPositions = [
+        { x: 0.35, z: -0.35, rotation: Math.PI / 4 },
+        { x: -0.35, z: -0.35, rotation: -Math.PI / 4 },
+        { x: 0.35, z: 0.35, rotation: -Math.PI / 4 },
+        { x: -0.35, z: 0.35, rotation: Math.PI / 4 }
+      ];
+
+      armPositions.forEach(pos => {
+        const arm = new THREE.Mesh(armGeo, armMat);
+        arm.rotation.z = Math.PI / 2;
+        arm.rotation.y = pos.rotation;
+        arm.position.set(pos.x * 0.5, 0.4, pos.z * 0.5);
+        arm.castShadow = true;
+        g.add(arm);
+      });
+
+      // Advanced 4-blade propeller systems - elevated for visibility
+      const props = [];
+
+      function createApplePropeller(x, z) {
+        const pg = new THREE.Group();
+        
+        // Precision hub - metallic grey
+        const hubGeo = new THREE.CylinderGeometry(0.02, 0.025, 0.04, 32);
+        const hubMat = new THREE.MeshStandardMaterial({
+          color: 0xc7c7cc,
+          roughness: 0.2,
+          metalness: 0.8
+        });
+        const hub = new THREE.Mesh(hubGeo, hubMat);
+        hub.rotation.x = Math.PI / 2;
+        hub.castShadow = true;
+        pg.add(hub);
+
+        // Carbon fiber 4-blade configuration - tiny blades
+        const bladeGeo = new THREE.BoxGeometry(0.16, 0.01, 0.025);
+        const bladeMat = new THREE.MeshStandardMaterial({
+          color: 0x1c1c1e,
+          roughness: 0.4,
+          metalness: 0.7
+        });
+        
+        // Create 4 blades at 90-degree intervals
+        for (let i = 0; i < 4; i++) {
+          const blade = new THREE.Mesh(bladeGeo, bladeMat);
+          blade.position.set(0.08, 0, 0);
+          blade.rotation.y = (i * Math.PI) / 2;
+          pg.add(blade);
+        }
+
+        // Position propellers at ultra compact arm ends
+        pg.position.set(x, 0.5, z);
+        g.add(pg);
+        props.push(pg);
+      }
+
+      // Position propellers at actual arm ends
+      // Arms have length 0.45 and are positioned diagonally, so extend from center
+      const armLength = 0.45;
+      const baseRadius = 0.175; // Base arm mounting position
+      const totalRadius = baseRadius + armLength / 2; // Distance from center to prop
+      
+      // Position props at actual arm ends (45-degree diagonal pattern)
+      createApplePropeller(totalRadius * Math.cos(Math.PI/4), -totalRadius * Math.sin(Math.PI/4)); // Front right
+      createApplePropeller(-totalRadius * Math.cos(Math.PI/4), -totalRadius * Math.sin(Math.PI/4)); // Front left  
+      createApplePropeller(totalRadius * Math.cos(Math.PI/4), totalRadius * Math.sin(Math.PI/4)); // Back right
+      createApplePropeller(-totalRadius * Math.cos(Math.PI/4), totalRadius * Math.sin(Math.PI/4)); // Back left
+      
+      g.userData.props = props;
+
+      g.position.set(droneState.x, droneState.y, droneState.z);
+
+      return g;
+    }
+
+
+    function updateCameraMode() {
+      if (!drone || !human) return;
+      
+      const targetPosition = new THREE.Vector3();
+      const targetLookAt = new THREE.Vector3();
+      
+      switch (cameraMode) {
+        case "follow":
+          targetPosition.set(
+            droneState.x - 3,
+            droneState.y + 2,
+            droneState.z + 2
+          );
+          targetLookAt.copy(drone.position);
+          break;
+          
+        case "overhead":
+          targetPosition.set(
+            humanState.x,
+            12,
+            humanState.z
+          );
+          targetLookAt.set(humanState.x, 0, humanState.z);
+          break;
+          
+        case "closeup":
+          targetPosition.set(
+            droneState.x + 1,
+            droneState.y + 0.5,
+            droneState.z + 1
+          );
+          targetLookAt.copy(drone.position);
+          break;
+          
+        case "side":
+          targetPosition.set(
+            humanState.x + 6,
+            3,
+            humanState.z
+          );
+          targetLookAt.set(humanState.x, 1, humanState.z);
+          break;
+          
+        default: // "default"
+          targetPosition.set(5, 8, 12);
+          targetLookAt.set(0, 1, 0);
+      }
+      
+      // Smooth camera transitions
+      camera.position.lerp(targetPosition, 0.05);
+      
+      const currentTarget = new THREE.Vector3();
+      camera.getWorldDirection(currentTarget);
+      currentTarget.multiplyScalar(10).add(camera.position);
+      currentTarget.lerp(targetLookAt, 0.05);
+      camera.lookAt(currentTarget);
+    }
+
+    function updateTelemetry() {
+      const altitude = Math.max(0, droneState.y - 0.5);
+      const distance = Math.sqrt(
+        Math.pow(droneState.x - humanState.x, 2) + 
+        Math.pow(droneState.z - humanState.z, 2)
+      );
+      
+      // Calculate speed based on position change
+      const prevPos = drone.userData.prevPosition || { x: droneState.x, y: droneState.y, z: droneState.z };
+      const speed = Math.sqrt(
+        Math.pow(droneState.x - prevPos.x, 2) + 
+        Math.pow(droneState.y - prevPos.y, 2) + 
+        Math.pow(droneState.z - prevPos.z, 2)
+      ) * 60; // Convert to per second
+      
+      drone.userData.prevPosition = { x: droneState.x, y: droneState.y, z: droneState.z };
+      
+      document.getElementById('altitudeValue').textContent = altitude.toFixed(1) + 'm';
+      document.getElementById('speedValue').textContent = speed.toFixed(1) + ' m/s';
+      document.getElementById('distanceValue').textContent = distance.toFixed(1) + 'm';
+    }
+
+    function updateMiniMap() {
+      const mapSize = 150;
+      const worldSize = 12; // Approximate world bounds
+      
+      // Convert world coordinates to map coordinates
+      const humanMapX = ((humanState.x + worldSize/2) / worldSize) * mapSize;
+      const humanMapZ = ((humanState.z + worldSize/2) / worldSize) * mapSize;
+      const droneMapX = ((droneState.x + worldSize/2) / worldSize) * mapSize;
+      const droneMapZ = ((droneState.z + worldSize/2) / worldSize) * mapSize;
+      
+      document.getElementById('mapHuman').style.left = humanMapX + 'px';
+      document.getElementById('mapHuman').style.top = humanMapZ + 'px';
+      document.getElementById('mapDrone').style.left = droneMapX + 'px';
+      document.getElementById('mapDrone').style.top = droneMapZ + 'px';
+      
+      // Add flight path point
+      if (droneState.state !== "landed") {
+        flightPath.push({ x: droneMapX, z: droneMapZ });
+        
+        // Limit flight path length
+        if (flightPath.length > 100) {
+          flightPath.shift();
+        }
+        
+        // Update flight path visualization
+        const miniMap = document.getElementById('miniMap');
+        const existingPaths = miniMap.querySelectorAll('.flight-path');
+        existingPaths.forEach(path => path.remove());
+        
+        flightPath.forEach((point, index) => {
+          const pathDot = document.createElement('div');
+          pathDot.className = 'flight-path';
+          pathDot.style.left = point.x + 'px';
+          pathDot.style.top = point.z + 'px';
+          pathDot.style.opacity = (index / flightPath.length) * 0.5;
+          miniMap.appendChild(pathDot);
+        });
+      }
+    }
+    
+    function updateWeatherEffects() {
+      // Gentle breeze simulation - subtle wind effects
+      const time = frameCount * 0.01;
+      windEffect.x = Math.sin(time * 0.7) * 0.015 + Math.cos(time * 0.3) * 0.008;
+      windEffect.z = Math.cos(time * 0.5) * 0.012 + Math.sin(time * 0.9) * 0.006;
+      
+      // Apply wind effects to drone when airborne
+      if (droneState.state !== "landed") {
+        droneState.x += windEffect.x;
+        droneState.z += windEffect.z;
+        
+        // Subtle rotation from wind
+        if (drone) {
+          drone.rotation.z = windEffect.x * 0.5;
+          drone.rotation.x = windEffect.z * 0.3;
+        }
+      }
+    }
+
+    // ======== UI + SPEECH ========
+
+    function setupUI() {
+      const voiceBtn = document.getElementById("voiceBtn");
+
+      voiceBtn.addEventListener("click", () => {
+        if (!recognition) return;
+        if (!listening) {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.log('Failed to start recognition:', e);
+          }
+        } else {
+          listening = false;
+          recognition.stop();
+        }
+      });
+      
+      // Don't auto-start - wait for user click to avoid permission prompts
+    }
+
+    function setupSpeechRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        speechSupported = false;
+        return;
+      }
+      speechSupported = true;
+      recognition = new SR();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.maxAlternatives = 1;
+
+      const voiceBtn = document.getElementById("voiceBtn");
+
+      recognition.onstart = () => {
+        listening = true;
+        permissionGranted = true;
+        voiceBtn.textContent = "🎙 Always Listening";
+        voiceBtn.style.background = "linear-gradient(90deg,#30d158,#66ffa3)";
+        showVoiceDisplay('Listening...');
+      };
+      recognition.onend = () => {
+        // Auto-restart if we were supposed to be listening and permission was granted
+        if (listening && permissionGranted) {
+          setTimeout(() => {
+            try {
+              recognition.start();
+            } catch (e) {
+              // If we get an error trying to restart, it might be a permission issue
+              if (e.name === 'InvalidStateError' || e.name === 'NotAllowedError') {
+                console.log('Recognition restart blocked:', e.name);
+                permissionGranted = false;
+                listening = false;
+                voiceBtn.textContent = "🎙 Click to Listen";
+                voiceBtn.style.background = "linear-gradient(90deg,#0a84ff,#64d2ff)";
+                hideVoiceDisplay();
+                return;
+              }
+              console.log('Failed to restart recognition:', e);
+            }
+          }, 250); // Slightly longer delay to prevent rapid restarts
+        } else {
+          voiceBtn.textContent = "🎙 Click to Listen";
+          voiceBtn.style.background = "linear-gradient(90deg,#0a84ff,#64d2ff)";
+          hideVoiceDisplay();
+        }
+      };
+      recognition.onerror = (event) => {
+        console.log('Speech recognition error:', event.error);
+        
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          listening = false;
+          permissionGranted = false;
+          voiceBtn.textContent = "🎙 Permission Denied";
+          voiceBtn.style.background = "linear-gradient(90deg,#ff453a,#ff9f0a)";
+          hideVoiceDisplay();
+        } else if (event.error === 'aborted') {
+          // Aborted errors are usually from stopping/starting, don't restart automatically
+          console.log('Recognition aborted - normal operation');
+        } else if (event.error === 'audio-capture' || event.error === 'network') {
+          // These errors can happen during normal operation, try to restart only if permission is granted
+          if (listening && permissionGranted) {
+            console.log('Attempting restart after', event.error, 'error');
+            setTimeout(() => {
+              try {
+                recognition.start();
+              } catch (e) {
+                console.log('Failed to restart after error:', e);
+                // Stop trying after failed restart attempts
+                listening = false;
+                voiceBtn.textContent = "🎙 Click to Listen";
+                voiceBtn.style.background = "linear-gradient(90deg,#0a84ff,#64d2ff)";
+                hideVoiceDisplay();
+              }
+            }, 1500); // Even longer delay for these types of errors
+          }
+        } else {
+          // Other errors, stop listening
+          listening = false;
+          voiceBtn.textContent = "🎙 Click to Listen";
+          voiceBtn.style.background = "linear-gradient(90deg,#0a84ff,#64d2ff)";
+          hideVoiceDisplay();
+        }
+      };
+      recognition.onresult = (e) => {
+        let finalText = "";
+        let interimText = "";
+        
+        // Only process the most recent result to avoid accumulation
+        const lastResultIndex = e.results.length - 1;
+        const result = e.results[lastResultIndex];
+        
+        if (result.isFinal) {
+          finalText = result[0].transcript.trim();
+          showVoiceDisplay('✅ "' + finalText + '"');
+          handleCommand(finalText);
+          // Clear the command display and return to listening after a brief moment
+          setTimeout(() => {
+            if (listening) {
+              showVoiceDisplay('Listening...');
+            }
+          }, 2000);
+        } else {
+          interimText = result[0].transcript.trim();
+          if (interimText) {
+            showVoiceDisplay('👂 "' + interimText + '"');
+          }
+        }
+      };
+    }
+
+    function handleCommand(text) {
+      lastCommandText = text;
+      document.getElementById("lastCmdText").textContent = text;
+
+      const cmd = text.toLowerCase();
+
+      // Enhanced Apple-style commands with sound feedback
+      if (cmd.includes("take off") || cmd.includes("takeoff") || cmd.includes("fly") || cmd.includes("launch")) {
+        droneState.state = "takeoff";
+        playSound('takeoff');
+      } else if (cmd.includes("hover") || cmd.includes("hold")) {
+        droneState.state = "hover";
+        playSound('hover');
+      } else if (cmd.includes("follow") || cmd.includes("track")) {
+        droneState.state = "follow";
+        playSound('follow');
+      } else if (cmd.includes("orbit") || cmd.includes("circle")) {
+        droneState.state = "orbit";
+        droneState.orbitAngle = 0; // Reset orbit angle
+        playSound('orbit');
+      } else if (cmd.includes("wide shot") || cmd.includes("wide") || cmd.includes("cinematic")) {
+        droneState.state = "wideshot";
+        playSound('orbit'); // Similar sound to orbit
+      } else if (cmd.includes("land") || cmd.includes("return home")) {
+        droneState.state = "land";
+        playSound('land');
+      } else if (cmd.includes("stop") || cmd.includes("emergency")) {
+        droneState.state = "stop";
+        playSound('stop');
+      }
+      
+      // Camera angle commands
+      if (cmd.includes("overhead") || cmd.includes("top view") || cmd.includes("bird")) {
+        cameraMode = "overhead";
+      } else if (cmd.includes("close up") || cmd.includes("closeup") || cmd.includes("close")) {
+        cameraMode = "closeup";
+      } else if (cmd.includes("side view") || cmd.includes("side") || cmd.includes("profile")) {
+        cameraMode = "side";
+      } else if (cmd.includes("follow cam") || cmd.includes("follow view")) {
+        cameraMode = "follow";
+      } else if (cmd.includes("default view") || cmd.includes("normal view") || cmd.includes("reset camera")) {
+        cameraMode = "default";
+      }
+
+      prevDroneState = droneState.state;
+    }
+
+    function modeLabel() {
+      switch (droneState.state) {
+        case "takeoff": return "🚀 Precision Launch";
+        case "hover":   return "⭕ Steady Hover";
+        case "follow":  return "👤 Smart Tracking";
+        case "orbit":   return "🔄 Cinematic Orbit";
+        case "wideshot": return "🎬 Wide Shot";
+        case "land":    return "🛬 Gentle Landing";
+        case "stop":    return "⏸ Emergency Hold";
+        case "landed":  return "🏠 Ready";
+        default:        return "⚡ Standby";
+      }
+    }
+    
+    // Sound effects system with Apple-style audio feedback
+    function playSound(type) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        const frequencies = {
+          takeoff: [440, 880],
+          hover: [330, 660],
+          follow: [523, 1046],
+          orbit: [392, 784],
+          land: [294, 588],
+          stop: [220, 220]
+        };
+        
+        const freq = frequencies[type] || [440, 880];
+        oscillator.frequency.setValueAtTime(freq[0], audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(freq[1], audioContext.currentTime + 0.3);
+        
+        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } catch (e) {
+        // Graceful fallback if audio context fails
+        console.log('Audio feedback not available');
+      }
+    }
+    
+    // ======== SOUND WAVE VISUALIZATION ========
+    
+    function initSoundWave() {
+      const soundWaveContainer = document.getElementById('soundWave');
+      soundWaveBars = [];
+      
+      // Create 5 tiny sound wave bars
+      for (let i = 0; i < 5; i++) {
+        const bar = document.createElement('div');
+        bar.style.cssText = `
+          width: 2px;
+          height: 3px;
+          background: linear-gradient(to top, #007AFF, #64D2FF);
+          border-radius: 1px;
+          transition: all 0.1s ease;
+        `;
+        soundWaveContainer.appendChild(bar);
+        soundWaveBars.push(bar);
+      }
+    }
+    
+    function animateSoundWave() {
+      if (!isListening) return;
+      
+      soundWaveBars.forEach((bar, i) => {
+        const height = 2 + Math.random() * 8 + Math.sin(Date.now() * 0.01 + i * 0.5) * 3;
+        bar.style.height = height + 'px';
+        bar.style.opacity = 0.6 + Math.random() * 0.4;
+      });
+      
+      if (isListening) {
+        setTimeout(animateSoundWave, 100);
+      }
+    }
+    
+    function stopSoundWave() {
+      soundWaveBars.forEach(bar => {
+        bar.style.height = '3px';
+        bar.style.opacity = '0.3';
+      });
+    }
+    
+    function showVoiceDisplay(text = 'Listening...') {
+      const display = document.getElementById('voiceDisplay');
+      const voiceText = document.getElementById('voiceText');
+      
+      voiceText.textContent = text;
+      display.style.display = 'block';
+      
+      if (text === 'Listening...') {
+        isListening = true;
+        animateSoundWave();
+      } else if (text.startsWith('👂')) {
+        // Interim results - keep sound wave active
+        isListening = true;
+        animateSoundWave();
+      } else {
+        // Final results or other messages
+        isListening = false;
+        stopSoundWave();
+      }
+    }
+    
+    function hideVoiceDisplay() {
+      const display = document.getElementById('voiceDisplay');
+      display.style.display = 'none';
+      isListening = false;
+      stopSoundWave();
+    }
+
+    // ======== ANIMATION LOOP ========
+
+    function animate() {
+      requestAnimationFrame(animate);
+      frameCount++;
+
+      updateHuman();
+      updateDrone();
+      updateVisuals();
+      updateCameraMode();
+      updateTelemetry();
+      updateMiniMap();
+      updateWeatherEffects();
+
+      renderer.render(scene, camera);
+      document.getElementById("modeText").textContent = modeLabel();
+    }
+
+    // ======== LOGIC ========
+
+    function updateHuman() {
+      if (droneState.state === "follow") {
+        humanState.x += humanState.walkDir * 0.03;
+        const minX = -4;
+        const maxX = 4;
+        if (humanState.x > maxX) humanState.walkDir = -1;
+        if (humanState.x < minX) humanState.walkDir = 1;
+      }
+      human.position.set(humanState.x, 0, humanState.z);
+
+      // Breathing
+      const t = frameCount * 0.04;
+      const breath = Math.sin(t) * 0.05;
+
+      human.children.forEach((child) => {
+        if (child.geometry && child.geometry.type === "BoxGeometry") {
+          // torso is around y ~ 1.2 in our setup
+          if (child.position.y > 1 && child.position.y < 1.4) {
+            child.position.y = 1.2 + breath * 0.3; // torso
+          }
+        }
+      });
+
+      const head = human.userData.head;
+      const pupilL = human.userData.pupilLeft;
+      const pupilR = human.userData.pupilRight;
+      if (head && pupilL && pupilR) {
+        head.position.y = 1.8 + breath * 0.2;
+
+        const dx = droneState.x - humanState.x;
+        const gazeDir = THREE.MathUtils.clamp(dx / 4, -1, 1);
+        const offset = THREE.MathUtils.mapLinear(gazeDir, -1, 1, -0.03, 0.03);
+
+        pupilL.position.x = -0.06 + offset;
+        pupilR.position.x =  0.06 + offset;
+      }
+    }
+
+    function updateDrone() {
+      const hoverY = 1.8;
+      const groundY = 0.5;
+
+      // Propeller spin: only when actively flying (not landing or landed)
+      if (droneState.state !== "landed" && droneState.state !== "land") {
+        const airborneStates = ["takeoff", "hover", "follow", "orbit", "wideshot", "stop"];
+        if (airborneStates.includes(droneState.state)) {
+          // Faster spin for more dramatic visual effect
+          droneState.propAngle += 0.4;
+        }
+      }
+      // Propellers stop spinning when landing or landed
+      else {
+        // Gradually slow down the propellers when landing
+        if (droneState.propAngle > 0) {
+          droneState.propAngle *= 0.95; // Gradual deceleration
+          if (droneState.propAngle < 0.01) {
+            droneState.propAngle = 0; // Full stop
+          }
+        }
+      }
+
+      switch (droneState.state) {
+        case "takeoff": {
+          let tx = humanState.x + 1.2;
+          let ty = hoverY;
+          let tz = 0;
+
+          droneState.x = lerp(droneState.x, tx, 0.06);
+          droneState.y = lerp(droneState.y, ty, 0.08);
+          droneState.z = lerp(droneState.z, tz, 0.06);
+
+          if (distance3(droneState.x, droneState.y, droneState.z, tx, ty, tz) < 0.08) {
+            droneState.state = "hover";
+          }
+          break;
+        }
+
+        case "hover": {
+          let tx = humanState.x + 1.6;
+          let ty = hoverY;
+          let tz = -0.6;
+
+          droneState.x = lerp(droneState.x, tx, 0.06);
+          droneState.y = lerp(droneState.y, ty, 0.08);
+          droneState.z = lerp(droneState.z, tz, 0.06);
+          break;
+        }
+
+        case "follow": {
+          let tx = humanState.x - 2.0;
+          let ty = hoverY;
+          let tz = 0.2;
+
+          droneState.x = lerp(droneState.x, tx, 0.06);
+          droneState.y = lerp(droneState.y, ty, 0.06);
+          droneState.z = lerp(droneState.z, tz, 0.06);
+          break;
+        }
+        
+        case "orbit": {
+          // Cinematic orbit mode - circle around human with smooth camera-like movement
+          const radius = 3.5;
+          const heightVariation = 0.3;
+          droneState.orbitAngle += 0.015; // Slower, more cinematic
+          
+          let tx = humanState.x + Math.cos(droneState.orbitAngle) * radius;
+          let ty = hoverY + Math.sin(droneState.orbitAngle * 2) * heightVariation; // Slight height variation
+          let tz = humanState.z + Math.sin(droneState.orbitAngle) * radius;
+
+          droneState.x = lerp(droneState.x, tx, 0.03); // Slower, smoother movement
+          droneState.y = lerp(droneState.y, ty, 0.03);
+          droneState.z = lerp(droneState.z, tz, 0.03);
+          break;
+        }
+        
+        case "wideshot": {
+          // Wide shot mode - high altitude and distant positioning for cinematic shots
+          const wideDistance = 6.0; // Much further back
+          const wideHeight = 3.5;   // Higher altitude
+          const sideOffset = 2.0;   // Slight side angle for better composition
+          
+          let tx = humanState.x - wideDistance + Math.sin(frameCount * 0.005) * 0.5; // Gentle drift
+          let ty = wideHeight + Math.sin(frameCount * 0.003) * 0.2; // Subtle height variation
+          let tz = humanState.z + sideOffset + Math.cos(frameCount * 0.004) * 0.3; // Side positioning
+
+          droneState.x = lerp(droneState.x, tx, 0.02); // Very smooth, slow movement
+          droneState.y = lerp(droneState.y, ty, 0.02);
+          droneState.z = lerp(droneState.z, tz, 0.02);
+          break;
+        }
+
+        case "land": {
+          let tx = humanState.x + 2.0;
+          let ty = groundY;
+          let tz = 0;
+
+          droneState.x = lerp(droneState.x, tx, 0.05);
+          droneState.y = lerp(droneState.y, ty, 0.08);
+          droneState.z = lerp(droneState.z, tz, 0.05);
+
+          if (distance3(droneState.x, droneState.y, droneState.z, tx, ty, tz) < 0.05) {
+            droneState.state = "landed";
+          }
+          break;
+        }
+
+        case "stop": {
+          // hold position mid-air where it currently is
+          droneState.y = lerp(droneState.y, hoverY, 0.04);
+          break;
+        }
+
+        case "landed": {
+          droneState.y = groundY;
+          break;
+        }
+      }
+
+      drone.position.set(droneState.x, droneState.y, droneState.z);
+    }
+
+    // Simplified flight paths without obstacle avoidance
+
+    function updateVisuals() {
+      // micro jitter only in air
+      if (droneState.state !== "landed" && droneState.state !== "land") {
+        const jitterX = (noise(frameCount * 0.02 + 100) - 0.5) * 0.06;
+        const jitterZ = (noise(frameCount * 0.02 + 200) - 0.5) * 0.06;
+        drone.position.x += jitterX;
+        drone.position.z += jitterZ;
+      }
+
+      // tilt based on position difference
+      const dx = droneState.x - humanState.x;
+      let tilt = 0;
+      if (["follow", "hover"].includes(droneState.state)) {
+        tilt = THREE.MathUtils.mapLinear(dx, -4, 4, -Math.PI / 18, Math.PI / 18);
+      }
+      drone.rotation.z = tilt;
+
+      // spin props visually
+      const props = drone.userData.props || [];
+      props.forEach((p) => {
+        p.rotation.y = droneState.propAngle;
+      });
+
+      // LED color
+      const led = drone.userData.led;
+      if (led) {
+        let col = 0x8e8e93; // Default standby color
+        if (droneState.state === "hover") col = 0x30d158; // Green
+        else if (droneState.state === "land") col = 0xff9f0a; // Orange
+        else if (droneState.state === "landed") col = 0xff453a; // Red
+        else if (droneState.state === "follow") col = 0x007AFF; // Apple Blue
+        else if (droneState.state === "orbit") col = 0xbf5af2; // Purple
+        else if (droneState.state === "wideshot") col = 0xff6b35; // Cinematic Orange
+        else if (droneState.state === "takeoff") col = 0x64d2ff; // Light Blue
+        else if (droneState.state === "stop") col = 0xff453a; // Red
+
+        led.material.color.setHex(col);
+        led.material.emissive.setHex(col);
+        // Add subtle pulsing effect
+        led.material.emissiveIntensity = 0.6 + Math.sin(frameCount * 0.1) * 0.3;
+      }
+    }
+
+    // ======== UTILS ========
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function distance3(x1, y1, z1, x2, y2, z2) {
+      const dx = x1 - x2;
+      const dy = y1 - y2;
+      const dz = z1 - z2;
+      return Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
+    // simple fake noise
+    function noise(x) {
+      return (Math.sin(x * 2.3 + 1.7) + 1) / 2;
+    }
+  </script>
+</body>
+</html>
